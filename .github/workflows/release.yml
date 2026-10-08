@@ -30,9 +30,6 @@ jobs:
           version: "0.21.8"
           verb: call
           args: release --src . --github-token env:GITHUB_TOKEN
-          dagger-flags: >-
-            --progress plain
-            --cache-to type=gha,mode=max,scope=release
-            --cache-from type=gha,scope=release
+          dagger-flags: --progress plain
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

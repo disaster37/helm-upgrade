@@ -25,7 +25,4 @@ jobs:
           version: "0.21.8"
           verb: call
           args: ci --src .
-          dagger-flags: >-
-            --progress plain
-            --cache-to type=gha,mode=max,scope=ci
-            --cache-from type=gha,scope=ci
+          dagger-flags: --progress plain
