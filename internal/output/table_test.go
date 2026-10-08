@@ -120,3 +120,39 @@ func TestFormatTimeZero(t *testing.T) {
 		t.Fatalf("got %q, want empty", got)
 	}
 }
+
+func TestPlanShowsBaseRevisionVersion(t *testing.T) {
+	refs := []helmx.ReleaseRef{
+		{Name: "web-a", Namespace: "prod", ChartName: "nginx", ChartVersion: "1.5.0",
+			Revision: 3, BaseRevision: 2, BaseChartVersion: "1.4.0"},
+		{Name: "web-b", Namespace: "prod", ChartName: "nginx", ChartVersion: "1.5.0",
+			Revision: 1, BaseRevision: -1},
+	}
+
+	var buf bytes.Buffer
+	if err := Plan(&buf, FormatTable, refs, "2.0.0"); err != nil {
+		t.Fatalf("Plan: %v", err)
+	}
+	out := buf.String()
+
+	// CURRENT_VERSION must show the base revision's chart version, not the
+	// version deployed right now.
+	for _, want := range []string{"BASE_REVISION", "1.4.0", "?"} {
+		if !strings.Contains(out, want) {
+			t.Fatalf("plan output missing %q:\n%s", want, out)
+		}
+	}
+	if strings.Contains(out, "1.5.0") {
+		t.Fatalf("plan showed the current chart version instead of the base one:\n%s", out)
+	}
+}
+
+func TestPlanWithoutBaseRevisionUnchanged(t *testing.T) {
+	var buf bytes.Buffer
+	if err := Plan(&buf, FormatTable, sample, "2.0.0"); err != nil {
+		t.Fatalf("Plan: %v", err)
+	}
+	if strings.Contains(buf.String(), "BASE_REVISION") {
+		t.Fatalf("base revision column shown without an offset:\n%s", buf.String())
+	}
+}

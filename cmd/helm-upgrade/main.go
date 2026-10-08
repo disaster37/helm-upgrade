@@ -300,6 +300,7 @@ func upgradeCommand(state *appState) *cli.Command {
 			&cli.DurationFlag{Name: "timeout", Value: 5 * time.Minute, Usage: "time to wait for each individual upgrade"},
 			&cli.IntFlag{Name: "max-history", Value: 10, Usage: "maximum number of release revisions to keep"},
 			&cli.IntFlag{Name: "parallelism", Value: 1, Usage: "number of concurrent upgrades"},
+			&cli.IntFlag{Name: "base-revision-offset", Value: 0, Usage: "reuse the values of revision n-`OFFSET` of each release instead of the current one (0 = current revision, 1 = the revision before it)"},
 			&cli.BoolFlag{Name: "force", Usage: "force resource updates through a replacement strategy"},
 			&cli.BoolFlag{Name: "disable-openapi-validation", Usage: "skip OpenAPI schema validation of rendered manifests"},
 		},
@@ -310,6 +311,9 @@ func upgradeCommand(state *appState) *cli.Command {
 func runUpgrade(c *cli.Context, state *appState) error {
 	if c.Int("parallelism") < 1 {
 		return usagef("--parallelism must be at least 1")
+	}
+	if c.Int("base-revision-offset") < 0 {
+		return usagef("--base-revision-offset must not be negative")
 	}
 
 	chartRef := c.String("chart")
@@ -376,12 +380,25 @@ func runUpgrade(c *cli.Context, state *appState) error {
 	}
 
 	// 4. Show the plan and confirm.
+	baseOffset := c.Int("base-revision-offset")
+	if baseOffset > 0 {
+		logrus.WithField("offset", baseOffset).
+			Warn("values will be taken from revision n-offset of each release; the current revision's values are discarded")
+		// Resolve the base revisions first so the plan reports the versions
+		// the run will actually start from.
+		refs = state.client.ResolveBaseRevisions(refs, baseOffset)
+	}
 	if err := output.Plan(os.Stdout, state.format, refs, ch.Metadata.Version); err != nil {
 		return err
 	}
 	dryRun := c.Bool("dry-run")
 	if !dryRun && !c.Bool("yes") {
-		ok, err := confirm(fmt.Sprintf("Upgrade %d release(s) to %s %s?", len(refs), ch.Metadata.Name, ch.Metadata.Version))
+		prompt := fmt.Sprintf("Upgrade %d release(s) to %s %s?", len(refs), ch.Metadata.Name, ch.Metadata.Version)
+		if baseOffset > 0 {
+			prompt = fmt.Sprintf("Upgrade %d release(s) to %s %s, reusing the values of revision n-%d and discarding the current values?",
+				len(refs), ch.Metadata.Name, ch.Metadata.Version, baseOffset)
+		}
+		ok, err := confirm(prompt)
 		if err != nil {
 			return err
 		}
@@ -405,6 +422,7 @@ func runUpgrade(c *cli.Context, state *appState) error {
 		DisableOpenAPIValidation: c.Bool("disable-openapi-validation"),
 		ContinueOnError:          c.Bool("continue-on-error"),
 		Parallelism:              c.Int("parallelism"),
+		BaseRevisionOffset:       baseOffset,
 	})
 
 	// 6. Report.

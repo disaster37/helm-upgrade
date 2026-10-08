@@ -14,14 +14,20 @@ import (
 
 // ReleaseRef is the trimmed-down view of a Helm release this CLI works with.
 type ReleaseRef struct {
-	Name         string    `json:"name" yaml:"name"`
-	Namespace    string    `json:"namespace" yaml:"namespace"`
-	ChartName    string    `json:"chart" yaml:"chart"`
-	ChartVersion string    `json:"chartVersion" yaml:"chartVersion"`
-	AppVersion   string    `json:"appVersion" yaml:"appVersion"`
-	Revision     int       `json:"revision" yaml:"revision"`
-	Status       string    `json:"status" yaml:"status"`
-	Updated      time.Time `json:"updated" yaml:"updated"`
+	Name         string `json:"name" yaml:"name"`
+	Namespace    string `json:"namespace" yaml:"namespace"`
+	ChartName    string `json:"chart" yaml:"chart"`
+	ChartVersion string `json:"chartVersion" yaml:"chartVersion"`
+	AppVersion   string `json:"appVersion" yaml:"appVersion"`
+	Revision     int    `json:"revision" yaml:"revision"`
+	// BaseRevision and BaseChartVersion describe the revision whose values a
+	// run will reuse when --base-revision-offset is in play. BaseRevision is
+	// 0 when the current revision is used and -1 when the offset could not be
+	// resolved; BaseChartVersion is the chart version of that revision.
+	BaseRevision     int       `json:"baseRevision,omitempty" yaml:"baseRevision,omitempty"`
+	BaseChartVersion string    `json:"baseChartVersion,omitempty" yaml:"baseChartVersion,omitempty"`
+	Status           string    `json:"status" yaml:"status"`
+	Updated          time.Time `json:"updated" yaml:"updated"`
 }
 
 // ListOptions controls which releases are returned.
