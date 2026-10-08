@@ -17,19 +17,22 @@ concurrency:
 jobs:
   release:
     runs-on: ubuntu-latest
+    timeout-minutes: 60
     steps:
-      - uses: actions/checkout@v4
+      # actions/checkout v4.4.0
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           fetch-depth: 0   # full history + tags, required by GoReleaser
 
-      - uses: dagger/dagger-for-github@v6
+      # dagger/dagger-for-github v6.15.1
+      - uses: dagger/dagger-for-github@f599d88d336fdf06f01f9bd24b6339954f7ba3e2
         with:
           version: "0.21.8"
           verb: call
           args: release --src . --github-token env:GITHUB_TOKEN
           dagger-flags: >-
             --progress plain
-            --cache-to type=gha,mode=max
-            --cache-from type=gha
+            --cache-to type=gha,mode=max,scope=release
+            --cache-from type=gha,scope=release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
