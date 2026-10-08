@@ -1,0 +1,20 @@
+{
+  "name": "helm-upgrade",
+  "engineVersion": "v0.21.8",
+  "sdk": {
+    "source": "go"
+  },
+  "dependencies": [
+    {
+      "name": "golang",
+      "source": "github.com/disaster37/dagger-library-go/golang@2.0.20",
+      "pin": "e205189be6eba617e7bcc870db2e73a04171f38e"
+    },
+    {
+      "name": "goreleaser",
+      "source": "github.com/goreleaser/goreleaser@v2.10.2",
+      "pin": "063c5d5b5c66fbdeaf5c50aeca444f5b581ec849"
+    }
+  ],
+  "source": "dagger"
+}

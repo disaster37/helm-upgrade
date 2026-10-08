@@ -1,0 +1,35 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+  # Optional alternative: also publish on the "release published" event.
+  # release:
+  #   types: [published]
+
+permissions:
+  contents: write
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # full history + tags, required by GoReleaser
+
+      - uses: dagger/dagger-for-github@v6
+        with:
+          version: "0.21.8"
+          verb: call
+          args: release --src . --github-token env:GITHUB_TOKEN
+          dagger-flags: >-
+            --progress plain
+            --cache-to type=gha,mode=max
+            --cache-from type=gha
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
