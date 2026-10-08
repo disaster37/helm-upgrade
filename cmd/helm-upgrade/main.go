@@ -498,7 +498,7 @@ func versionCommand() *cli.Command {
 	return &cli.Command{
 		Name:  "version",
 		Usage: "print version information",
-		Action: func(c *cli.Context) error {
+		Action: func(_ *cli.Context) error {
 			fmt.Printf("helm-upgrade %s (commit %s, built %s)\n", version, commit, buildDate)
 			fmt.Printf("helm SDK %s\n", helmSDK)
 			fmt.Printf("go %s %s/%s\n", runtime.Version(), runtime.GOOS, runtime.GOARCH)

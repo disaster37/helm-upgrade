@@ -1,3 +1,19 @@
+# golangci-lint v2 configuration.
+#
+# Migrated from the v1 format because the CI toolchain is Go 1.27 and no
+# golangci-lint v1.x release can type-check Go 1.27 packages (their bundled
+# x/tools cannot read Go 1.27 export data). The linter set is unchanged:
+# errcheck, govet, ineffassign, staticcheck, unused, misspell, revive,
+# bodyclose, nolintlint, plus the formatters gofmt and goimports (moved to the
+# `formatters` section, as required by v2).
+#
+# staticcheck scope: in v1, `staticcheck`, `gosimple` and `stylecheck` were
+# separate linters and this repo enabled only `staticcheck` (SA* checks).
+# v2 merged all three (plus the QF quickfix group) into `staticcheck`, so the
+# checks are restricted back to SA* to keep the exact same effective scope as
+# the previous v1 configuration.
+version: "2"
+
 run:
   timeout: 5m
   tests: true
@@ -9,17 +25,25 @@ linters:
     - ineffassign
     - staticcheck
     - unused
-    - gofmt
-    - goimports
     - misspell
     - revive
     - bodyclose
     - nolintlint
+  settings:
+    staticcheck:
+      checks:
+        - SA*
+  exclusions:
+    rules:
+      - path: _test\.go
+        linters:
+          - errcheck
+
+formatters:
+  enable:
+    - gofmt
+    - goimports
 
 issues:
-  exclude-rules:
-    - path: _test\.go
-      linters:
-        - errcheck
   max-issues-per-linter: 0
   max-same-issues: 0

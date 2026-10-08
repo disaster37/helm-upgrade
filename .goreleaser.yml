@@ -1,0 +1,52 @@
+version: 2
+
+project_name: helm-upgrade
+
+builds:
+  - id: helm-upgrade
+    main: ./cmd/helm-upgrade
+    binary: helm-upgrade
+    env:
+      - CGO_ENABLED=0
+    goos:
+      - linux
+      - darwin
+      - windows
+    goarch:
+      - amd64
+      - arm64
+    flags:
+      - -trimpath
+    ldflags:
+      # Must match the variables declared in cmd/helm-upgrade/main.go:
+      #   var version, commit, buildDate string  (package main)
+      - -s -w -X main.version={{ .Version }} -X main.commit={{ .Commit }} -X main.buildDate={{ .Date }}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - formats:
+      - tar.gz
+    name_template: >-
+      {{ .ProjectName }}_{{ .Version }}_{{ .Os }}_{{ .Arch }}
+    format_overrides:
+      - goos: windows
+        formats:
+          - zip
+
+checksum:
+  name_template: "checksums.txt"
+
+changelog:
+  sort: asc
+  filters:
+    exclude:
+      - "^docs:"
+      - "^test:"
+      - "^ci:"
+      - "^chore:"
+
+release:
+  github:
+    name: helm-upgrade
+  # owner is auto-detected from GITHUB_REPOSITORY / the checkout's git remote.
+  # Do NOT hardcode "example". Replace with the real org when known (see open questions).
